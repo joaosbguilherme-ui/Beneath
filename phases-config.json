@@ -2,7 +2,7 @@
   "fase01": {
     "phaseId": "fase01",
     "needUser": false,
-    "next": "../fase02/",
+    "next": "./fase02/",
     "hints": [
       "Key not found.",
       "Be more attentive.",
@@ -13,7 +13,7 @@
   "fase02": {
     "phaseId": "fase02",
     "needUser": true,
-    "next": "../fase03/",
+    "next": "./fase03/",
     "hints": [
       "falling blocks",
       "its name and its release date",
