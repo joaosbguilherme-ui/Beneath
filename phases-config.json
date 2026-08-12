@@ -1,0 +1,24 @@
+{
+  "fase01": {
+    "phaseId": "fase01",
+    "needUser": false,
+    "next": "../fase02/",
+    "hints": [
+      "Key not found.",
+      "Be more attentive.",
+      "It looks like you do not know where to look.",
+      "Where do they hide the key?"
+    ]
+  },
+  "fase02": {
+    "phaseId": "fase02",
+    "needUser": true,
+    "next": "../fase03/",
+    "hints": [
+      "falling blocks",
+      "its name and its release date",
+      "Identify the progressive pattern?",
+      "Alexei Pajitnov"
+    ]
+  }
+}
