@@ -1,23 +1,62 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-analytics.js";
-import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-functions.js";
+console.log("%cBeneath - Phase 02 - Loading...", "color: #c8a96e; font-size: 14px; font-weight: bold;");
 
-const firebaseConfig = {
-  apiKey: "AIzaSyCVgcfnHBjO33xGmml8jkVvydngrYXinPE",
-  authDomain: "beneath-05847.firebaseapp.com",
-  projectId: "beneath-05847",
-  storageBucket: "beneath-05847.firebasestorage.app",
-  messagingSenderId: "982086765242",
-  appId: "1:982086765242:web:033001cc2a6788616a1083",
-  measurementId: "G-Q99N3BQ66X"
-};
+// Carrega configuração local de fases
+let phasesConfig = {};
 
-const app = initializeApp(firebaseConfig);
-getAnalytics(app);
+(async () => {
+  try {
+    const response = await fetch('phases-config.json');
+    if (!response.ok) throw new Error('Failed to load phases config');
+    phasesConfig = await response.json();
+    console.log("✓ Fases carregadas do arquivo local");
+  } catch (error) {
+    console.error("✗ Erro ao carregar phases-config.json:", error);
+  }
+})();
 
-const functions = getFunctions(app);
-const getPhaseConfig = httpsCallable(functions, "getPhaseConfig");
-const validateAnswer = httpsCallable(functions, "validateAnswer");
+// Função para obter config de fase (sem CORS!)
+function getPhaseConfigLocal(phaseId) {
+  const phase = phasesConfig[phaseId];
+  if (!phase) return null;
+  
+  return {
+    phaseId,
+    needUser: phase.needUser || false,
+    next: phase.next || "",
+    hints: phase.hints || []
+  };
+}
+
+// Função para validar resposta
+function validateAnswerLocal(phaseId, username = "", password = "") {
+  // Aqui você define as respostas corretas
+  const ANSWERS = {
+    fase01: { password: "undertherug" },
+    fase02: { username: "architect", password: "1984" }
+  };
+
+  const expected = ANSWERS[phaseId] || {};
+  const phase = phasesConfig[phaseId];
+  
+  if (!phase) {
+    return { ok: false, error: "Phase not found" };
+  }
+
+  const validUsername = phase.needUser ? username === expected.username : true;
+  const validPassword = password === expected.password;
+
+  if (validUsername && validPassword) {
+    return {
+      ok: true,
+      ...getPhaseConfigLocal(phaseId)
+    };
+  }
+
+  return {
+    ok: false,
+    ...getPhaseConfigLocal(phaseId)
+  };
+}
 
 const phase = {
   phaseId: "fase02",
@@ -37,10 +76,12 @@ const login = document.getElementById("login");
 const message = document.getElementById("message");
 const userInput = document.getElementById("user");
 
-async function loadPhaseConfig() {
+function loadPhaseConfig() {
   try {
-    const result = await getPhaseConfig({ phaseId: phase.phaseId });
-    Object.assign(phase, result.data);
+    const result = getPhaseConfigLocal(phase.phaseId);
+    if (result) {
+      Object.assign(phase, result);
+    }
 
     if (userInput) {
       userInput.classList.toggle("hidden", !phase.needUser);
@@ -57,23 +98,19 @@ document.getElementById("access").addEventListener("click", () => {
   login.classList.remove("hidden");
 });
 
-document.getElementById("enter").addEventListener("click", async () => {
+document.getElementById("enter").addEventListener("click", () => {
   const u = document.getElementById("user").value.trim();
   const p = document.getElementById("password").value.trim();
 
   try {
-    const result = await validateAnswer({
-      phaseId: phase.phaseId,
-      username: u,
-      password: p
-    });
+    const result = validateAnswerLocal(phase.phaseId, u, p);
 
-    if (result.data.ok) {
-      window.location.href = result.data.next || phase.next;
+    if (result.ok) {
+      window.location.href = result.next || phase.next;
       return;
     }
 
-    Object.assign(phase, result.data);
+    Object.assign(phase, result);
     const hints = phase.hints || [];
     message.textContent = hints[Math.min(errors, hints.length - 1)] || "";
   } catch (error) {
