@@ -58,8 +58,10 @@ loadPhaseConfig();
 /* ── Arrastar imagem ───────────────────────────────────────────── */
 let isDragging       = false;
 let wasDragged       = false;           // distingue clique de arrasto
-let originClientX    = 0;
-let originClientY    = 0;
+let startClientX     = 0;
+let startClientY     = 0;
+let startImageLeft   = 0;
+let startImageTop    = 0;
 let currentLeft      = 0;
 let currentTop       = 0;
 const DRAG_THRESHOLD = 5;               // px mínimos para considerar arrasto
@@ -68,8 +70,10 @@ img.addEventListener("mousedown", (e) => {
   if (e.button !== 0) return;           // só botão esquerdo
   isDragging    = true;
   wasDragged    = false;
-  originClientX = e.clientX - currentLeft;
-  originClientY = e.clientY - currentTop;
+  startClientX  = e.clientX;
+  startClientY  = e.clientY;
+  startImageLeft = currentLeft;
+  startImageTop  = currentTop;
   img.classList.add("grabbing");
   e.preventDefault();                   // impede seleção de texto acidental
 });
@@ -77,20 +81,18 @@ img.addEventListener("mousedown", (e) => {
 document.addEventListener("mousemove", (e) => {
   if (!isDragging) return;
 
-  const dx = e.clientX - (originClientX + currentLeft);
-  const dy = e.clientY - (originClientY + currentTop);
+  const dx = e.clientX - startClientX;
+  const dy = e.clientY - startClientY;
 
   // Marca como arrasto real somente após o threshold
   if (!wasDragged) {
-    const totalDX = e.clientX - originClientX - currentLeft;
-    const totalDY = e.clientY - originClientY - currentTop;
-    if (Math.abs(totalDX) > DRAG_THRESHOLD || Math.abs(totalDY) > DRAG_THRESHOLD) {
+    if (Math.abs(dx) > DRAG_THRESHOLD || Math.abs(dy) > DRAG_THRESHOLD) {
       wasDragged = true;
     }
   }
 
-  currentLeft = e.clientX - originClientX;
-  currentTop  = e.clientY - originClientY;
+  currentLeft = startImageLeft + dx;
+  currentTop  = startImageTop + dy;
   img.style.left = currentLeft + "px";
   img.style.top  = currentTop  + "px";
 });
