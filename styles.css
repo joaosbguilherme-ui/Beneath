@@ -28,12 +28,37 @@ body{
   font-size:20px;
 }
 
-img{
+.stage-image-area{
+  position:relative;
+  width:700px;
+  max-width:100%;
+  height:500px;
+  margin:0 auto 30px;
+}
+
+#image{
+  position:absolute;
+  top:0;
+  left:0;
   max-width:100%;
   width:700px;
   max-height:500px;
-  margin-bottom:30px;
   display:block;
+  cursor:grab;
+  user-select:none;
+  -webkit-user-select:none;
+  touch-action:none;
+  z-index:2;
+}
+
+.key{
+  position:absolute;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  font-size:48px;
+  z-index:1;
+  pointer-events:none;
 }
 
 p{

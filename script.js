@@ -20,8 +20,8 @@ const getPhaseConfig = httpsCallable(functions, "getPhaseConfig");
 const validateAnswer = httpsCallable(functions, "validateAnswer");
 
 const phase = {
-  phaseId: "home",
-  needUser: true,
+  phaseId: "fase01",
+  needUser: false,
   next: "",
   hints: []
 };
@@ -32,10 +32,13 @@ console.clear();
 console.log("%cWelcome.", "color:white;font-size:22px;");
 console.log("%cNot everything is visible.", "color:gray;");
 
-const stage = document.getElementById("stage");
-const login = document.getElementById("login");
-const message = document.getElementById("message");
-const userInput = document.getElementById("user");
+/* ── Referências DOM ───────────────────────────────────────────── */
+const stage      = document.getElementById("stage");
+const login      = document.getElementById("login");
+const message    = document.getElementById("message");
+const img        = document.getElementById("image");
+const behindText = document.getElementById("behind-text");
+const userInput  = document.getElementById("user");
 
 async function loadPhaseConfig() {
   try {
@@ -52,6 +55,74 @@ async function loadPhaseConfig() {
 
 loadPhaseConfig();
 
+/* ── Arrastar imagem ───────────────────────────────────────────── */
+let isDragging       = false;
+let wasDragged       = false;           // distingue clique de arrasto
+let originClientX    = 0;
+let originClientY    = 0;
+let currentLeft      = 0;
+let currentTop       = 0;
+const DRAG_THRESHOLD = 5;               // px mínimos para considerar arrasto
+
+img.addEventListener("mousedown", (e) => {
+  if (e.button !== 0) return;           // só botão esquerdo
+  isDragging    = true;
+  wasDragged    = false;
+  originClientX = e.clientX - currentLeft;
+  originClientY = e.clientY - currentTop;
+  img.classList.add("grabbing");
+  e.preventDefault();                   // impede seleção de texto acidental
+});
+
+document.addEventListener("mousemove", (e) => {
+  if (!isDragging) return;
+
+  const dx = e.clientX - (originClientX + currentLeft);
+  const dy = e.clientY - (originClientY + currentTop);
+
+  // Marca como arrasto real somente após o threshold
+  if (!wasDragged) {
+    const totalDX = e.clientX - originClientX - currentLeft;
+    const totalDY = e.clientY - originClientY - currentTop;
+    if (Math.abs(totalDX) > DRAG_THRESHOLD || Math.abs(totalDY) > DRAG_THRESHOLD) {
+      wasDragged = true;
+    }
+  }
+
+  currentLeft = e.clientX - originClientX;
+  currentTop  = e.clientY - originClientY;
+  img.style.left = currentLeft + "px";
+  img.style.top  = currentTop  + "px";
+});
+
+document.addEventListener("mouseup", () => {
+  if (!isDragging) return;
+  isDragging = false;
+  img.classList.remove("grabbing");
+});
+
+// Cancela arrasto se o cursor sair da janela
+document.addEventListener("mouseleave", () => {
+  if (isDragging) {
+    isDragging = false;
+    img.classList.remove("grabbing");
+  }
+});
+
+/* ── Duplo clique: tornar imagem transparente / opaca ─────────── */
+// O texto já é visível por baixo — basta controlar a opacidade da imagem.
+let revealed = false;
+
+img.addEventListener("dblclick", () => {
+  // Ignora se o segundo clique fez parte de um arrasto real
+  if (wasDragged) return;
+
+  revealed = !revealed;
+  img.style.opacity       = revealed ? "0" : "1";
+  img.style.pointerEvents = revealed ? "none" : "auto";
+});
+
+/* ── Autenticação ─────────────────────────────────────────────── */
 document.getElementById("access").addEventListener("click", () => {
   stage.classList.add("hidden");
   login.classList.remove("hidden");
